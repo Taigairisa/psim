@@ -3,7 +3,8 @@ from unittest.mock import MagicMock
 
 from psim.core import Simulation
 from psim.model import connect
-from psim.blocks import Source, Process, Buffer, Sink
+from psim.blocks import Source, Process, Buffer, Sink, Router
+from psim.blocks.base import Entity, reset_entity_counter
 from psim.dists import Constant
 
 class TestSource:
@@ -197,3 +198,65 @@ class TestBuffer:
 
         # The entity should be rejected, and the content should not increase
         assert len(buffer.content) == 1
+
+
+class TestRouter:
+    def test_router_connect_and_routes(self):
+        """Tests that the connect method correctly adds routes."""
+        router = Router("R1", routing_logic=lambda e: "P1")
+        process1 = Process("P1", service_dist=Constant(1))
+        process2 = Process("P2", service_dist=Constant(1))
+
+        router.connect(process1).connect(process2)
+
+        assert len(router.routes) == 2
+        assert router.routes["P1"] == process1
+        assert router.routes["P2"] == process2
+
+    def test_routing_logic(self):
+        """Tests that the router sends entities to the correct destination."""
+        sim = Simulation()
+        # This logic function always returns 'P_A'
+        logic = lambda entity: "P_A"
+        router = Router("R1", routing_logic=logic)
+        sink_a = Sink("P_A")
+        sink_b = Sink("P_B")
+
+        router.connect(sink_a).connect(sink_b)
+        router.sim = sim
+        sink_a.sim = sim
+        sink_b.sim = sim
+
+        entity = MagicMock()
+        router.put(entity)
+        sim.run()
+
+        assert sink_a.entities_received == 1
+        assert sink_b.entities_received == 0
+
+    def test_invalid_destination(self):
+        """Tests that the router handles an invalid destination from the logic function."""
+        sim = Simulation()
+        # This logic function returns a destination that does not exist
+        logic = lambda entity: "P_C" # P_C is not a connected route
+        router = Router("R1", routing_logic=logic)
+        sink_a = Sink("P_A")
+
+        router.connect(sink_a)
+        router.sim = sim
+        sink_a.sim = sim
+
+        # We need a tracer to see the error message
+        tracer = MagicMock()
+        router.tracer = tracer
+
+        reset_entity_counter()
+        entity = Entity(name="E1", creation_time=0.0)
+        router.put(entity)
+        sim.run()
+
+        assert sink_a.entities_received == 0
+        tracer.log.assert_called_with(
+            0.0,
+            "ERROR: R1 routing logic returned invalid destination 'P_C' for E1. Entity was destroyed."
+        )
