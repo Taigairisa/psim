@@ -4,10 +4,13 @@ version = "0.1.0"
 description = "A Python-based discrete-event simulation tool with a viewer."
 dependencies = [
     "typer[all]",
-    "pyside6",
 ]
 
 [project.optional-dependencies]
+# To install the GUI viewer, use: pip install .[gui]
+gui = [
+    "pyside6",
+]
 dev = [
     "pytest",
     "ruff",

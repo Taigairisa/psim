@@ -1,4 +1,95 @@
-要件定義（ドラフト）
+# psim: Discrete-Event Simulation Tool
+
+`psim` is a Python-based tool for discrete-event simulation (DES). It allows you to define simulation models as Python objects, run them from the command line, and visualize their execution.
+
+## Current Status (As of August 2025)
+
+This project is in the early stages of development. The original `README.md` (preserved below in Japanese) outlines a very ambitious long-term vision. The current implementation is a small subset of that vision.
+
+**Implemented Features:**
+- A core simulation engine (`psim.core`) with a Future Event List.
+- Basic building blocks: `Source`, `Process`, `Sink`, `Buffer`.
+- A command-line interface (`psim run`) built with Typer.
+- An optional GUI viewer (`--gui`) based on PySide6.
+- A suite of unit tests for core components and blocks.
+
+**Key Missing Features from Vision:**
+- Advanced blocks (Router, Conveyor, etc.).
+- Resource management (Machines, Workers).
+- Detailed metrics and KPI reporting.
+- File-based configuration and results export.
+
+## Installation
+
+To install the core simulation engine, clone the repository and install it using pip:
+```bash
+git clone <repository-url>
+cd psim
+pip install .
+```
+
+To include the GUI viewer, you must install the `[gui]` extra, which adds the `PySide6` dependency:
+```bash
+pip install .[gui]
+```
+
+## Usage
+
+The primary entry point is the `psim run` command.
+
+```bash
+psim run path/to/your/model.py [OPTIONS]
+```
+
+**Example:**
+```bash
+# Run in headless mode
+psim run examples/line1.py --no-gui --until 100
+
+# Run with the GUI viewer
+psim run examples/line1.py --gui --until 100 --seed 42
+```
+
+**CLI Options:**
+```
+ Usage: psim run [OPTIONS] MODEL_FILE
+
+ Run a simulation from a model file.
+
+╭─ Arguments ──────────────────────────────────────────────────────────────────╮
+│ *    model_file      FILE  The path to the Python file containing the        │
+│                            simulation model. [required]                      │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────╮
+│ --until  -u              FLOAT    Simulation end time. Overrides model       │
+│                                   settings.                                  │
+│ --seed   -s              INTEGER  Random seed. Overrides model settings.     │
+│ --gui        --no-gui             Launch the GUI viewer or run in headless   │
+│                                   mode. [default: gui]                       │
+│ --help                            Show this message and exit.                │
+╰──────────────────────────────────────────────────────────────────────────────╯
+```
+
+## Development
+
+To work on `psim`, install the development dependencies:
+```bash
+pip install -e .[dev]
+```
+
+### Running Tests
+
+To run the full test suite, use `pytest`. You must set the `PYTHONPATH` to include the project root for the tests to discover the `psim` module correctly.
+
+```bash
+PYTHONPATH=. pytest
+```
+
+---
+---
+---
+
+# 要件定義（ドラフト）
 
 プロジェクト名（仮）: psim — Python Discrete-Event Simulation + Viewer
 方針: モデルはすべてコード（Pythonオブジェクト）で定義。起動はコマンドで行い、引数で実行速度などを指定。コマンド実行で可視化（Viewer）とシミュレーション計算が開始される。
@@ -295,5 +386,3 @@ RTF：Real-Time Factor。実時間に対するシミュ時間の倍率（1x=等�
 ドラフトのため、引数名・既定値・ブロックAPIは実装都合で微修正の可能性あり。
 
 追加要望（AGV/品質/製番等）が確定すれば、P1/P2の優先順位を調整する。
-
-

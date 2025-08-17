@@ -1,9 +1,21 @@
-from PySide6.QtCore import QObject, Signal
+try:
+    from PySide6.QtCore import QObject, Signal
+except ImportError:
+    # Fallback for headless mode
+    QObject = object
+    class Signal:
+        def __init__(self, *args, **kwargs):
+            pass
+        def emit(self, *args, **kwargs):
+            pass
 
 class Tracer(QObject):
     """
     A QObject that emits signals for various simulation events.
     The viewer can connect to these signals to visualize the simulation.
+
+    If PySide6 is not installed, it falls back to a dummy implementation
+    that does nothing, allowing for headless execution.
     """
 
     # A generic signal for logging text messages.
