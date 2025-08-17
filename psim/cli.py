@@ -10,8 +10,9 @@ from psim.viewer.main import launch_viewer, HAVE_PYSIDE6
 # Create a Typer application
 app = typer.Typer(
     name="psim",
-    help="A Python-based discrete-event simulation tool.",
+    help="Run a simulation from a model file.",
     add_completion=False,
+    invoke_without_command=True, # Allows the callback to be the main command
 )
 
 def _find_model_in_module(module) -> Model | None:
@@ -27,7 +28,6 @@ def _load_model_from_file(model_file: Path) -> Model | None:
         print(f"Error: Model file not found at {model_file}")
         raise typer.Exit(code=1)
 
-    # Add the model file's directory to the Python path to handle relative imports
     module_dir = model_file.parent.resolve()
     sys.path.insert(0, str(module_dir))
 
@@ -39,7 +39,6 @@ def _load_model_from_file(model_file: Path) -> Model | None:
         print(f"Error loading model file: {e}")
         raise typer.Exit(code=1)
     finally:
-        # Clean up the path
         sys.path.pop(0)
 
     model_instance = _find_model_in_module(module)
@@ -50,7 +49,7 @@ def _load_model_from_file(model_file: Path) -> Model | None:
     return model_instance
 
 
-@app.command()
+@app.callback()
 def run(
     model_file: Annotated[
         Path,
@@ -76,11 +75,10 @@ def run(
     ] = True,
 ):
     """
-    Run a simulation from a model file.
+    psim: A Python-based discrete-event simulation tool.
     """
     model_instance = _load_model_from_file(model_file)
 
-    # Override model parameters from CLI options if they were provided
     if until is not None:
         model_instance.until = until
         typer.echo(f"Overriding simulation end time: --until {until}")
@@ -99,8 +97,6 @@ def run(
         typer.echo("Launching GUI viewer...")
         launch_viewer(model_instance)
     else:
-        # In headless mode, connect a simple logger to the tracer for console output
-        # A simple lambda is used here, but a more robust logger could be configured.
         if hasattr(model_instance.tracer, "message_logged"):
              model_instance.tracer.message_logged.connect(
                 lambda time, msg: typer.echo(f"{time:.2f}: {msg}")
@@ -111,7 +107,6 @@ def run(
         typer.secho("✅ Simulation run complete.", fg=typer.colors.GREEN)
 
 
-# This is the entry point for the 'psim' command defined in pyproject.toml
 main = app
 
 if __name__ == "__main__":
