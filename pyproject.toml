@@ -1,0 +1,23 @@
+[project]
+name = "psim"
+version = "0.1.0"
+description = "A Python-based discrete-event simulation tool with a viewer."
+dependencies = [
+    "typer[all]",
+    "pyside6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[project.scripts]
+psim = "psim.cli:main"
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
